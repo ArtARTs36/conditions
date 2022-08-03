@@ -15,51 +15,11 @@ func NewMapNumberCollection(items map[float64]bool) MapNumberCollection {
 	return MapNumberCollection{items: items}
 }
 
-func NewMapNumberMapCollectionFromIntList(items []int) MapNumberCollection {
+func NewMapNumberCollectionFromList(items []interface{}) MapNumberCollection {
 	itemsMap := make(map[float64]bool)
 
 	for _, val := range items {
-		itemsMap[float64(val)] = true
-	}
-
-	return NewMapNumberCollection(itemsMap)
-}
-
-func NewMapNumberMapCollectionFromInt32List(items []int32) MapNumberCollection {
-	itemsMap := make(map[float64]bool)
-
-	for _, val := range items {
-		itemsMap[float64(val)] = true
-	}
-
-	return NewMapNumberCollection(itemsMap)
-}
-
-func NewMapNumberMapCollectionFromInt64List(items []int64) MapNumberCollection {
-	itemsMap := make(map[float64]bool)
-
-	for _, val := range items {
-		itemsMap[float64(val)] = true
-	}
-
-	return NewMapNumberCollection(itemsMap)
-}
-
-func NewMapNumberMapCollectionFromFloat32List(items []float32) MapNumberCollection {
-	itemsMap := make(map[float64]bool)
-
-	for _, val := range items {
-		itemsMap[float64(val)] = true
-	}
-
-	return NewMapNumberCollection(itemsMap)
-}
-
-func NewMapNumberMapCollectionFromFloat64List(items []float64) MapNumberCollection {
-	itemsMap := make(map[float64]bool)
-
-	for _, val := range items {
-		itemsMap[val] = true
+		itemsMap[val.(float64)] = true
 	}
 
 	return NewMapNumberCollection(itemsMap)
