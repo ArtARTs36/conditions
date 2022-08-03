@@ -177,6 +177,12 @@ var validTestData = []struct {
 	//{!~
 	{"{status} !~ /^5\\d\\d/", map[string]interface{}{"status": "500"}, false, false},
 	{"{status} !~ /^4\\d\\d/", map[string]interface{}{"status": "500"}, true, false},
+
+	// collection
+
+	{"54 IN {numbers}", map[string]interface{}{
+		"numbers": NewMapNumberMapCollectionFromIntList([]int64{54, 32, 11, 22, 33}),
+	}, true, false},
 }
 
 func TestValid(t *testing.T) {

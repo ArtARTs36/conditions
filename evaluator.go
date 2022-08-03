@@ -175,11 +175,29 @@ func evaluateSubtree(expr Expr, args ArgResolver) (Expr, error) {
 					}
 				}
 			}
+		case reflect.Struct:
+			numCollection := tryCreateNumberCollection(arg)
+
+			if numCollection != nil {
+				return numCollection, nil
+			}
+
+			return falseExpr, fmt.Errorf("unsupported structure of argument %s type: %s", n.Val, kind)
 		}
 		return falseExpr, fmt.Errorf("Unsupported argument %s type: %s", n.Val, kind)
 	}
 
 	return expr, nil
+}
+
+func tryCreateNumberCollection(arg interface{}) *NumberCollectionLiteral {
+	numCollection, isNumCollection := arg.(MapNumberCollection)
+
+	if !isNumCollection {
+		return nil
+	}
+
+	return &NumberCollectionLiteral{Val: &numCollection}
 }
 
 // applyOperator is a dispatcher of the evaluation according to operator
@@ -292,6 +310,13 @@ func applyIN(l, r Expr) (*BooleanLiteral, error) {
 			return nil, err
 		}
 
+		switch r.(type) {
+		case *NumberCollectionLiteral:
+			rNumbers := r.(*NumberCollectionLiteral)
+
+			return &BooleanLiteral{Val: rNumbers.Val.Has(a)}, nil
+		}
+
 		b, err = getSliceNumber(r)
 
 		if err != nil {
@@ -302,6 +327,8 @@ func applyIN(l, r Expr) (*BooleanLiteral, error) {
 		for _, e := range b {
 			if float64Equal(a, e, defaultEpsilon) {
 				found = true
+
+				break
 			}
 		}
 	default:
