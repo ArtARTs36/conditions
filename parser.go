@@ -370,6 +370,12 @@ func (p *Parser) scanArg() (rune, string, error) {
 			continue
 		}
 
+		// Allow variables to contain "_"
+		if t == '_' {
+			sep = "_"
+			continue
+		}
+
 		if t == '}' {
 			ti, _ := p.scan()
 			if ti == '{' {
