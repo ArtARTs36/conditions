@@ -1,6 +1,14 @@
 package conditions
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
+
+type Collection interface {
+	String() string
+	Count() int
+}
 
 type NumberCollection interface {
 	Has(number float64) bool
@@ -16,58 +24,29 @@ type MapNumberCollection struct {
 	items map[float64]bool
 }
 
-func NewMapNumberCollection(items map[float64]bool) MapNumberCollection {
-	return MapNumberCollection{items: items}
+func NewMapNumberCollectionFromMap(items map[float64]bool) Collection {
+	return &MapNumberCollection{items: items}
 }
 
-func NewMapNumberMapCollectionFromIntList(items []int) MapNumberCollection {
-	itemsMap := make(map[float64]bool)
+func NewMapNumberCollection(items []interface{}) Collection {
+	itemMap := make(map[float64]bool)
 
-	for _, val := range items {
-		itemsMap[float64(val)] = true
+	for _, item := range items {
+		switch i := item.(type) {
+		case float64:
+			itemMap[i] = true
+		case float32:
+			itemMap[float64(i)] = true
+		case int64:
+			itemMap[float64(i)] = true
+		case int32:
+			itemMap[float64(i)] = true
+		case int:
+			itemMap[float64(i)] = true
+		}
 	}
 
-	return NewMapNumberCollection(itemsMap)
-}
-
-func NewMapNumberMapCollectionFromInt32List(items []int32) MapNumberCollection {
-	itemsMap := make(map[float64]bool)
-
-	for _, val := range items {
-		itemsMap[float64(val)] = true
-	}
-
-	return NewMapNumberCollection(itemsMap)
-}
-
-func NewMapNumberMapCollectionFromInt64List(items []int64) MapNumberCollection {
-	itemsMap := make(map[float64]bool)
-
-	for _, val := range items {
-		itemsMap[float64(val)] = true
-	}
-
-	return NewMapNumberCollection(itemsMap)
-}
-
-func NewMapNumberMapCollectionFromFloat32List(items []float32) MapNumberCollection {
-	itemsMap := make(map[float64]bool)
-
-	for _, val := range items {
-		itemsMap[float64(val)] = true
-	}
-
-	return NewMapNumberCollection(itemsMap)
-}
-
-func NewMapNumberMapCollectionFromFloat64List(items []float64) MapNumberCollection {
-	itemsMap := make(map[float64]bool)
-
-	for _, val := range items {
-		itemsMap[val] = true
-	}
-
-	return NewMapNumberCollection(itemsMap)
+	return NewMapNumberCollectionFromMap(itemMap)
 }
 
 func (c *MapNumberCollection) Has(number float64) bool {
@@ -88,18 +67,22 @@ func (c *MapNumberCollection) String() string {
 	return str
 }
 
+func (c *MapNumberCollection) Count() int {
+	return len(c.items)
+}
+
 type MapStringCollection struct {
 	items map[string]bool
 }
 
-func NewMapStringCollection(items []string) MapStringCollection {
+func NewMapStringCollection(items []interface{}) Collection {
 	strMap := make(map[string]bool)
 
 	for _, item := range items {
-		strMap[item] = true
+		strMap[item.(string)] = true
 	}
 
-	return MapStringCollection{
+	return &MapStringCollection{
 		items: strMap,
 	}
 }
@@ -120,4 +103,41 @@ func (c *MapStringCollection) String() string {
 	str += "]"
 
 	return str
+}
+
+func (c *MapStringCollection) Count() int {
+	return len(c.items)
+}
+
+func NewCollection(items []interface{}) (Collection, error) {
+	for _, item := range items {
+		switch item.(type) {
+		case int:
+			return NewMapNumberCollection(items), nil
+		case int64:
+			return NewMapNumberCollection(items), nil
+		case int32:
+			return NewMapNumberCollection(items), nil
+		case float32:
+			return NewMapNumberCollection(items), nil
+		case float64:
+			return NewMapNumberCollection(items), nil
+		case string:
+			return NewMapStringCollection(items), nil
+		default:
+			return nil, fmt.Errorf("collection type %s not supported", reflect.TypeOf(item).Kind())
+		}
+	}
+
+	return nil, fmt.Errorf("collection items is empty")
+}
+
+func TryNewCollection(items []interface{}) Collection {
+	collection, err := NewCollection(items)
+
+	if err == nil {
+		return collection
+	}
+
+	return nil
 }

@@ -180,12 +180,22 @@ var validTestData = []struct {
 
 	// number collection
 
+	{"54 IN {numbers}", map[string]interface{}{
+		"numbers": TryNewCollection([]interface{}{54, 32, 11, 22, 33}),
+	}, true, false},
+
+	{"54 IN {numbers.list}", map[string]interface{}{
+		"numbers.list": TryNewCollection([]interface{}{54, 32, 11, 22, 33}),
+	}, true, false},
+
+	// string collection
+
 	{"\"54\" IN {strings}", map[string]interface{}{
-		"strings": NewMapStringCollection([]string{"54", "32", "11", "22", "33"}),
+		"strings": TryNewCollection([]interface{}{"54", "32", "11", "22", "33"}),
 	}, true, false},
 
 	{"\"54\" IN {strings.list}", map[string]interface{}{
-		"strings.list": NewMapStringCollection([]string{"54", "32", "11", "22", "33"}),
+		"strings.list": TryNewCollection([]interface{}{"54", "32", "11", "22", "33"}),
 	}, true, false},
 }
 

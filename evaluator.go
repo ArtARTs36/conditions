@@ -176,24 +176,31 @@ func evaluateSubtree(expr Expr, args ArgResolver) (Expr, error) {
 				}
 			}
 		case reflect.Struct:
-			numCollection := tryCreateNumberCollectionLiteral(arg)
-
-			if numCollection != nil {
-				return numCollection, nil
-			}
-
-			strCollection := tryCreateStringCollectionLiteral(arg)
-
-			if strCollection != nil {
-				return strCollection, nil
-			}
-
-			return falseExpr, fmt.Errorf("unsupported structure of argument %s type: %s", n.Val, kind)
+			return createCollectionLiteral(n.Val, kind, arg)
+		case reflect.Ptr:
+			return createCollectionLiteral(n.Val, kind, arg)
 		}
+
 		return falseExpr, fmt.Errorf("Unsupported argument %s type: %s", n.Val, kind)
 	}
 
 	return expr, nil
+}
+
+func createCollectionLiteral(argName string, itemType reflect.Kind, arg interface{}) (Expr, error) {
+	numCollection := tryCreateNumberCollectionLiteral(arg)
+
+	if numCollection != nil {
+		return numCollection, nil
+	}
+
+	strCollection := tryCreateStringCollectionLiteral(arg)
+
+	if strCollection != nil {
+		return strCollection, nil
+	}
+
+	return falseExpr, fmt.Errorf("unsupported structure of argument %s type: %s", argName, itemType)
 }
 
 func tryCreateNumberCollectionLiteral(arg interface{}) *NumberCollectionLiteral {
