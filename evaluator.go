@@ -176,7 +176,7 @@ func evaluateSubtree(expr Expr, args ArgResolver) (Expr, error) {
 				}
 			}
 		case reflect.Struct:
-			numCollection := tryCreateNumberCollection(arg)
+			numCollection := tryCreateNumberCollectionLiteral(arg)
 
 			if numCollection != nil {
 				return numCollection, nil
@@ -190,14 +190,14 @@ func evaluateSubtree(expr Expr, args ArgResolver) (Expr, error) {
 	return expr, nil
 }
 
-func tryCreateNumberCollection(arg interface{}) *NumberCollectionLiteral {
-	numCollection, isNumCollection := arg.(MapNumberCollection)
+func tryCreateNumberCollectionLiteral(arg interface{}) *NumberCollectionLiteral {
+	numCollection, isNumCollection := arg.(*MapNumberCollection)
 
 	if !isNumCollection {
 		return nil
 	}
 
-	return &NumberCollectionLiteral{Val: &numCollection}
+	return &NumberCollectionLiteral{Val: numCollection}
 }
 
 // applyOperator is a dispatcher of the evaluation according to operator
