@@ -55,6 +55,16 @@ func NewMapNumberMapCollectionFromFloat32List(items []float32) MapNumberCollecti
 	return NewMapNumberCollection(itemsMap)
 }
 
+func NewMapNumberMapCollectionFromFloat64List(items []float64) MapNumberCollection {
+	itemsMap := make(map[float64]bool)
+
+	for _, val := range items {
+		itemsMap[val] = true
+	}
+
+	return NewMapNumberCollection(itemsMap)
+}
+
 func (c *MapNumberCollection) Has(number float64) bool {
 	_, exists := c.items[number]
 
