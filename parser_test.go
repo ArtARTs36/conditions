@@ -181,7 +181,7 @@ var validTestData = []struct {
 	// collection
 
 	{"54 IN {numbers}", map[string]interface{}{
-		"numbers": NewMapNumberMapCollectionFromIntList([]int64{54, 32, 11, 22, 33}),
+		"numbers": NewMapNumberMapCollectionFromInt64List([]int64{54, 32, 11, 22, 33}),
 	}, true, false},
 }
 
