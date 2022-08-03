@@ -178,14 +178,14 @@ var validTestData = []struct {
 	{"{status} !~ /^5\\d\\d/", map[string]interface{}{"status": "500"}, false, false},
 	{"{status} !~ /^4\\d\\d/", map[string]interface{}{"status": "500"}, true, false},
 
-	// collection
+	// number collection
 
-	{"54 IN {numbers}", map[string]interface{}{
-		"numbers": NewMapNumberMapCollectionFromIntList([]int{54, 32, 11, 22, 33}),
+	{"\"54\" IN {strings}", map[string]interface{}{
+		"strings": NewMapStringCollection([]string{"54", "32", "11", "22", "33"}),
 	}, true, false},
 
-	{"54 IN {numbers.list}", map[string]interface{}{
-		"numbers.list": NewMapNumberMapCollectionFromIntList([]int{54, 32, 11, 22, 33}),
+	{"\"54\" IN {strings.list}", map[string]interface{}{
+		"strings.list": NewMapStringCollection([]string{"54", "32", "11", "22", "33"}),
 	}, true, false},
 }
 

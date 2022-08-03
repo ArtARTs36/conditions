@@ -182,6 +182,12 @@ func evaluateSubtree(expr Expr, args ArgResolver) (Expr, error) {
 				return numCollection, nil
 			}
 
+			strCollection := tryCreateStringCollectionLiteral(arg)
+
+			if strCollection != nil {
+				return strCollection, nil
+			}
+
 			return falseExpr, fmt.Errorf("unsupported structure of argument %s type: %s", n.Val, kind)
 		}
 		return falseExpr, fmt.Errorf("Unsupported argument %s type: %s", n.Val, kind)
@@ -191,13 +197,35 @@ func evaluateSubtree(expr Expr, args ArgResolver) (Expr, error) {
 }
 
 func tryCreateNumberCollectionLiteral(arg interface{}) *NumberCollectionLiteral {
-	numCollection, isNumCollection := arg.(*MapNumberCollection)
+	numCollection, isNumCollection := arg.(MapNumberCollection)
 
-	if !isNumCollection {
-		return nil
+	if isNumCollection {
+		return &NumberCollectionLiteral{Val: &numCollection}
 	}
 
-	return &NumberCollectionLiteral{Val: numCollection}
+	numCollectionRef, isNumCollectionRef := arg.(*MapNumberCollection)
+
+	if isNumCollectionRef {
+		return &NumberCollectionLiteral{Val: numCollectionRef}
+	}
+
+	return nil
+}
+
+func tryCreateStringCollectionLiteral(arg interface{}) *StringCollectionLiteral {
+	numCollection, isNumCollection := arg.(MapStringCollection)
+
+	if isNumCollection {
+		return &StringCollectionLiteral{Val: &numCollection}
+	}
+
+	numCollectionRef, isNumCollectionRef := arg.(*MapStringCollection)
+
+	if isNumCollectionRef {
+		return &StringCollectionLiteral{Val: numCollectionRef}
+	}
+
+	return nil
 }
 
 // applyOperator is a dispatcher of the evaluation according to operator
@@ -295,6 +323,13 @@ func applyIN(l, r Expr) (*BooleanLiteral, error) {
 		a, err = getString(l)
 		if err != nil {
 			return nil, err
+		}
+
+		switch r.(type) {
+		case *StringCollectionLiteral:
+			rNumbers := r.(*StringCollectionLiteral)
+
+			return &BooleanLiteral{Val: rNumbers.Val.Has(a)}, nil
 		}
 
 		b, err = getMapString(r)

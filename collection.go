@@ -7,6 +7,11 @@ type NumberCollection interface {
 	String() string
 }
 
+type StringCollection interface {
+	Has(val string) bool
+	String() string
+}
+
 type MapNumberCollection struct {
 	items map[float64]bool
 }
@@ -76,6 +81,40 @@ func (c *MapNumberCollection) String() string {
 
 	for item := range c.items {
 		str += fmt.Sprintf("%f,", item)
+	}
+
+	str += "]"
+
+	return str
+}
+
+type MapStringCollection struct {
+	items map[string]bool
+}
+
+func NewMapStringCollection(items []string) MapStringCollection {
+	strMap := make(map[string]bool)
+
+	for _, item := range items {
+		strMap[item] = true
+	}
+
+	return MapStringCollection{
+		items: strMap,
+	}
+}
+
+func (c *MapStringCollection) Has(val string) bool {
+	_, exists := c.items[val]
+
+	return exists
+}
+
+func (c *MapStringCollection) String() string {
+	str := "["
+
+	for item := range c.items {
+		str += fmt.Sprintf("%s,", item)
 	}
 
 	str += "]"
