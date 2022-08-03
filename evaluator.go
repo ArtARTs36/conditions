@@ -20,8 +20,13 @@ func SetDefaultEpsilon(ep float64) {
 
 // Evaluate takes an expr and evaluates it using given args
 func Evaluate(expr Expr, args map[string]interface{}) (bool, error) {
+	return EvaluateWithArgResolver(expr, NewMapArgResolver(args))
+}
+
+// EvaluateWithArgResolver takes an expr and evaluates it using given arg resolver
+func EvaluateWithArgResolver(expr Expr, args ArgResolver) (bool, error) {
 	if expr == nil {
-		return false, fmt.Errorf("Provided expression is nil")
+		return false, fmt.Errorf("provided expression is nil")
 	}
 
 	result, err := evaluateSubtree(expr, args)
@@ -32,11 +37,11 @@ func Evaluate(expr Expr, args map[string]interface{}) (bool, error) {
 	case *BooleanLiteral:
 		return n.Val, nil
 	}
-	return false, fmt.Errorf("Unexpected result of the root expression: %#v", result)
+	return false, fmt.Errorf("unexpected result of the root expression: %#v", result)
 }
 
 // evaluateSubtree performs given expr evaluation recursively
-func evaluateSubtree(expr Expr, args map[string]interface{}) (Expr, error) {
+func evaluateSubtree(expr Expr, args ArgResolver) (Expr, error) {
 	if expr == nil {
 		return falseExpr, fmt.Errorf("Provided expression is nil")
 	}
@@ -65,81 +70,85 @@ func evaluateSubtree(expr Expr, args map[string]interface{}) (Expr, error) {
 		if err != nil {
 			return falseExpr, fmt.Errorf("Failed to resolve argument index %s: %s", n.Val, err.Error())
 		}
-		if _, ok := args[index]; !ok {
-			return falseExpr, fmt.Errorf("argument: %v not found", index)
+
+		arg, err := args.Resolve(index)
+
+		if err != nil {
+			return falseExpr, fmt.Errorf("argument %v not resolved: %s", index, err.Error())
 		}
 
-		typeof := reflect.TypeOf(args[index])
+		typeof := reflect.TypeOf(arg)
 		if typeof == nil {
 			return falseExpr, fmt.Errorf("Unsupported argument nil type")
 		}
+
 		kind := typeof.Kind()
 		switch kind {
 		case reflect.Int:
-			return &NumberLiteral{Val: float64(args[index].(int))}, nil
+			return &NumberLiteral{Val: float64(arg.(int))}, nil
 		case reflect.Int32:
-			return &NumberLiteral{Val: float64(args[index].(int32))}, nil
+			return &NumberLiteral{Val: float64(arg.(int32))}, nil
 		case reflect.Int64:
-			return &NumberLiteral{Val: float64(args[index].(int64))}, nil
+			return &NumberLiteral{Val: float64(arg.(int64))}, nil
 		case reflect.Float32:
-			return &NumberLiteral{Val: float64(args[index].(float32))}, nil
+			return &NumberLiteral{Val: float64(arg.(float32))}, nil
 		case reflect.Float64:
-			return &NumberLiteral{Val: float64(args[index].(float64))}, nil
+			return &NumberLiteral{Val: float64(arg.(float64))}, nil
 		case reflect.String:
-			if num, ok := args[index].(json.Number); ok {
+			if num, ok := arg.(json.Number); ok {
 				f, err := num.Float64()
 				if err != nil {
-					return falseExpr, fmt.Errorf("Unsupported JSON Number %v type: %s", args[index], kind)
+					return falseExpr, fmt.Errorf("Unsupported JSON Number %v type: %s", arg, kind)
 				}
 				return &NumberLiteral{Val: f}, nil
 			}
-			return &StringLiteral{Val: args[index].(string)}, nil
+			return &StringLiteral{Val: arg.(string)}, nil
 		case reflect.Bool:
-			return &BooleanLiteral{Val: args[index].(bool)}, nil
+			return &BooleanLiteral{Val: arg.(bool)}, nil
 		case reflect.Slice:
-			switch args[index].(type) {
+			switch arg.(type) {
 			case []string:
-				ssl := NewSliceStringLiteral(args[index].([]string))
+				ssl := NewSliceStringLiteral(arg.([]string))
 				return ssl, nil
 			case []int:
 				snl := &SliceNumberLiteral{}
-				for _, v := range args[index].([]int) {
+				for _, v := range arg.([]int) {
 					snl.Val = append(snl.Val, float64(v))
 				}
 				return snl, nil
 			case []int32:
 				snl := &SliceNumberLiteral{}
-				for _, v := range args[index].([]int32) {
+				for _, v := range arg.([]int32) {
 					snl.Val = append(snl.Val, float64(v))
 				}
 				return snl, nil
 			case []int64:
 				snl := &SliceNumberLiteral{}
-				for _, v := range args[index].([]int64) {
+				for _, v := range arg.([]int64) {
 					snl.Val = append(snl.Val, float64(v))
 				}
 				return snl, nil
 			case []float32:
 				snl := &SliceNumberLiteral{}
-				for _, v := range args[index].([]float32) {
+				for _, v := range arg.([]float32) {
 					snl.Val = append(snl.Val, float64(v))
 				}
 				return snl, nil
 			case []float64:
 				snl := &SliceNumberLiteral{}
-				for _, v := range args[index].([]float64) {
+				for _, v := range arg.([]float64) {
 					snl.Val = append(snl.Val, float64(v))
 				}
 				return snl, nil
 			case []json.Number:
 				snl := &SliceNumberLiteral{}
-				for _, v := range args[index].([]json.Number) {
+				for _, v := range arg.([]json.Number) {
 					f, _ := v.Float64()
 					snl.Val = append(snl.Val, f)
 				}
 				return snl, nil
 			case []interface{}:
-				items := args[index].([]interface{})
+				items := arg.([]interface{})
 				if len(items) != 0 {
 					item := items[0]
 					switch item.(type) {
@@ -397,7 +406,7 @@ func applyEQ(l, r Expr) (*BooleanLiteral, error) {
 	if err == nil {
 		bs, err = getString(r)
 		if err != nil {
-			return falseExpr, fmt.Errorf("Cannot compare string with non-string")
+			return falseExpr, fmt.Errorf("cannot compare string(%v) with non-string(%v)", l, r)
 		}
 		return &BooleanLiteral{Val: (as == bs)}, nil
 	}
