@@ -340,57 +340,54 @@ func (p *Parser) scanArray(tt string) (rune, string, error) {
 	return t, tt, fmt.Errorf("parsing error: no ] found in array syntax")
 }
 
+func argNameSymbolIsInvalid(symbol string) bool {
+	return symbol == " " || symbol == "+"
+}
+
 // extract {variable} to variable
 // extract {variable}{key1}{key2} to variable.key1.key2
 // handle variable name which start with a "@"
 func (p *Parser) scanArg() (rune, string, error) {
 	var t rune
-	var tt string
-	var ttTmp string
-	var sep string
-
-	sep = ""
+	var argName string
+	var symbol string
 
 	for {
-		t, ttTmp = p.scan()
-		tt = tt + sep + ttTmp
-		if t == '@' {
-			continue
+		t, symbol = p.scan()
+
+		if t == scanner.EOF {
+			return t, argName, fmt.Errorf("args error")
 		}
-		t, _ := p.scan()
-		// Allow variables to contain "-"
-		if t == '-' {
-			sep = "-"
+
+		if argNameSymbolIsInvalid(symbol) {
+			return t, argName, fmt.Errorf("args error")
+		}
+
+		if symbol == "@" {
+			argName += symbol
+
 			continue
 		}
 
-		// Allow variables to contain "."
-		if t == '.' {
-			sep = "."
-			continue
-		}
+		if symbol == "}" {
+			_, nextSymbol := p.scan()
 
-		// Allow variables to contain "_"
-		if t == '_' {
-			sep = "_"
-			continue
-		}
+			if argNameSymbolIsInvalid(symbol) {
+				return t, argName, fmt.Errorf("args error")
+			}
 
-		if t == '}' {
-			ti, _ := p.scan()
-			if ti == '{' {
-				sep = "."
+			if nextSymbol == "{" {
+				argName += "."
+
 				continue
 			}
 
 			p.unscan()
 
-			return t, tt, nil
+			return t, argName, nil
 		}
 
-		if t != '}' {
-			return t, tt, fmt.Errorf("Args error")
-		}
+		argName += symbol
 	}
 }
 

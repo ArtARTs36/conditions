@@ -197,6 +197,10 @@ var validTestData = []struct {
 	{"\"54\" IN {strings.list}", map[string]interface{}{
 		"strings.list": TryNewCollection([]interface{}{"54", "32", "11", "22", "33"}),
 	}, true, false},
+
+	{"{foo.laz.1.bar} == 20", map[string]interface{}{
+		"foo.laz.1.bar": 20,
+	}, true, false},
 }
 
 func TestValid(t *testing.T) {
